@@ -239,6 +239,32 @@ const encrypt = async (
 ): Promise<Ciphertext> => {
   const mimc7 = await buildMimc7();
   // [assignment] generate the IV, use Mimc7 to hash the shared key with the IV, then encrypt the plain text
+  // Generate the IV
+  // iiv.map((x,i) => arr[i] = x.toString(16).padStart(2, '0'));
+  // const iv:bigint = BigInt(`0x${arr.join('')}`);
+  let v1
+  let v2
+  let arr : Array<String> = new Array(32);
+  // iiv.map((x,i) => arr[i] = x.toString(16).padStart(2, '0'));
+  const iv1 = mimc7.multiHash(plaintext, BigInt(0))
+  iv1.map((x,i) => arr[i] = x.toString(16).padStart(2, '0'));
+  const iv:bigint = BigInt(`0x${arr.join('')}`);
+ 
+  const ciphertext: Ciphertext = {
+      
+    
+    iv,
+      data: plaintext.map((e: bigint, i: number): bigint  => {
+        v1 = mimc7.hash(sharedKey, iv + BigInt(i));
+        v1.map((x,i) => arr[i] = x.toString(16).padStart(2, '0'));
+        v2 = BigInt(`0x${arr.join('')}`);
+        return e + v2;
+      }),
+  }
+  
+  // TODO: add asserts here
+  return ciphertext
+
 };
 
 /*
@@ -249,7 +275,33 @@ const decrypt = async (
   ciphertext: Ciphertext,
   sharedKey: EcdhSharedKey,
 ): Promise<Plaintext> => {
+  const mimc7 = await buildMimc7();
+
   // [assignment] use Mimc7 to hash the shared key with the IV, then descrypt the ciphertext
+  
+  // let arr : Array<String> = new Array(32);
+  let v1
+  let v2
+  let arr : Array<String> = new Array(32);
+
+  // let c1
+ 
+  // ciphertext.iv.map((x,i) => arr[i] = x.toString(16).padStart(2, '0'));
+  // c1 = BigInt(`0x${arr.join('')}`);
+  
+  const plaintext: Plaintext = ciphertext.data.map(
+    (e: bigint, i: number): bigint => {
+      v1 = mimc7.hash(sharedKey, ciphertext.iv + BigInt(i));
+      v1.map((x,i) => arr[i] = x.toString(16).padStart(2, '0'));
+      v2= BigInt(`0x${arr.join('')}`);
+     // const map1 = ciphertext.iv.map(x => BigInt(x) + BigInt(i));
+      
+        return e - v2
+    }
+)
+
+return plaintext
+  
 };
 
 export {
